@@ -54,7 +54,13 @@ def decrypt_data(encrypted_data: bytes, key: bytes) -> bytes:
     return fernet.decrypt(encrypted_data)
 
 def main():
-    file_path = 'test.mp4'  # Replace with your file path
+    file_path = input("Enter the path of the file you want to encrypt: ")
+    
+    # Validate if the file exists
+    if not os.path.isfile(file_path):
+        print("Error: The specified file does not exist.")
+        return
+
     original_data = file_to_base64(file_path)
     
     if original_data is not None:
@@ -72,10 +78,13 @@ def main():
         # Decrypt the data back to verify
         with open('encrypted.bin', 'rb') as enc_file:
             encrypted_data = enc_file.read()
+        
         decrypted_data = decrypt_data(encrypted_data, key)
         
-        # Save the decrypted data back to a file
-        base64_to_file(decrypted_data, 'decrypted.mp4')  # Output the original file name
+        # Save the decrypted data back to a file, maintain the original filename
+        output_file_path = 'decrypted_' + os.path.basename(file_path)
+        base64_to_file(decrypted_data, output_file_path)  
+        print(f"Decrypted file saved as '{output_file_path}'.")
 
 if __name__ == "__main__":
     main()
