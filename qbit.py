@@ -74,27 +74,34 @@ def main():
     if original_data is not None:
         key = generate_key()
         save_key_to_file(key, 'secret.key')
-        print(f'encrypt...')
+        print(f'Encrypting...')
         encrypted_data = encrypt_data(original_data, key)
 
-        # Compress the encrypted data
-        print(f'zipping...')
-        compressed_data = compress_data(encrypted_data)
-
-        # Store the compressed encrypted data in a file
+        # Check if the user wants to compress the data
+        compress_choice = input("Do you want to compress the encrypted data? (y/n): ").strip().lower()
+        
+        if compress_choice == 'y':
+            print(f'Compressing...')
+            compressed_data = compress_data(encrypted_data)
+        else:
+            compressed_data = encrypted_data
+        
+        # Store the (possibly compressed) encrypted data in a file
         with open('encrypted.bin', 'wb') as enc_file:
             enc_file.write(compressed_data)
 
-        print("File encrypted, compressed, and saved as 'encrypted.bin'.")
+        print("File encrypted, (optionally compressed), and saved as 'encrypted.bin'.")
 
         # Decrypt the data back to verify
         with open('encrypted.bin', 'rb') as enc_file:
-            compressed_data = enc_file.read()
+            stored_data = enc_file.read()
         
-        # Decompress the data
-        encryption_decompressed = decompress_data(compressed_data)
+        # Decompress the data if it was compressed
+        if compress_choice == 'y':
+            print("Decompressing...")
+            stored_data = decompress_data(stored_data)
 
-        decrypted_data = decrypt_data(encryption_decompressed, key)
+        decrypted_data = decrypt_data(stored_data, key)
 
         # Save the decrypted data back to a file, maintain the original filename
         output_file_path = 'decrypted_' + os.path.basename(file_path)
