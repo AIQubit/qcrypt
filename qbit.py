@@ -72,27 +72,34 @@ def main():
     original_data = file_to_base64(file_path)
 
     if original_data is not None:
-        key = generate_key()
-        save_key_to_file(key, 'secret.key')
-        print(f'Encrypting...')
-        encrypted_data = encrypt_data(original_data, key)
+        num_layers = int(input("Enter the number of layers of encryption to generate: "))
+        keys = []
+        
+        # Generate multiple keys and encrypt the data for each layer
+        encrypted_data = original_data
+        for i in range(num_layers):
+            key = generate_key()
+            keys.append(key)
+            save_key_to_file(key, f'secret_layer_{i + 1}.key')
+            print(f'Encrypting layer {i + 1}...')
+            encrypted_data = encrypt_data(encrypted_data, key)
 
-        # Check if the user wants to compress the data
+        # Optionally compress the final layer of encrypted data
         compress_choice = input("Do you want to compress the encrypted data? (y/n): ").strip().lower()
         
         if compress_choice == 'y':
-            print(f'Compressing...')
+            print('Compressing...')
             compressed_data = compress_data(encrypted_data)
         else:
             compressed_data = encrypted_data
-        
+
         # Store the (possibly compressed) encrypted data in a file
         with open('encrypted.bin', 'wb') as enc_file:
             enc_file.write(compressed_data)
 
-        print("File encrypted, (optionally compressed), and saved as 'encrypted.bin'.")
+        print("All layers encrypted (optionally compressed), and saved as 'encrypted.bin'.")
 
-        # Decrypt the data back to verify
+        # To decrypt: Read back stored data, decompress if necessary
         with open('encrypted.bin', 'rb') as enc_file:
             stored_data = enc_file.read()
         
@@ -101,11 +108,13 @@ def main():
             print("Decompressing...")
             stored_data = decompress_data(stored_data)
 
-        decrypted_data = decrypt_data(stored_data, key)
+        # Decrypt each layer, starting from the last layer's key
+        for key in reversed(keys):
+            stored_data = decrypt_data(stored_data, key)
 
         # Save the decrypted data back to a file, maintain the original filename
         output_file_path = 'decrypted_' + os.path.basename(file_path)
-        base64_to_file(decrypted_data, output_file_path)
+        base64_to_file(stored_data, output_file_path)
         print(f"Decrypted file saved as '{output_file_path}'.")
 
 if __name__ == "__main__":
